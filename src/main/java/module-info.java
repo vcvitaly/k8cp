@@ -24,6 +24,15 @@ module io.github.vcvitaly.k8cp {
     requires kotlin.stdlib;
     requires org.apache.commons.lang3;
     requires org.bouncycastle.pkix;
+    requires org.bouncycastle.provider;
+    requires org.bouncycastle.util;
+    requires jdk.crypto.ec;
+
+    requires org.kordamp.ikonli.core;
+    requires org.kordamp.ikonli.fontawesome;
+    requires org.kordamp.ikonli.material2;
+
+//    requires jdk.jdwp.agent;
 
     opens io.github.vcvitaly.k8cp to javafx.fxml;
     exports io.github.vcvitaly.k8cp;
@@ -35,6 +44,7 @@ module io.github.vcvitaly.k8cp {
     exports io.github.vcvitaly.k8cp.enumeration;
     exports io.github.vcvitaly.k8cp.util;
     exports io.github.vcvitaly.k8cp.exception;
+    exports io.github.vcvitaly.k8cp.context;
     opens io.github.vcvitaly.k8cp.controller to javafx.fxml;
     opens io.github.vcvitaly.k8cp.controller.menu to javafx.fxml;
     opens io.github.vcvitaly.k8cp.controller.init to javafx.fxml;

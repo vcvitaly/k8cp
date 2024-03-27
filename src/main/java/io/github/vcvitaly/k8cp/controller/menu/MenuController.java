@@ -1,6 +1,6 @@
 package io.github.vcvitaly.k8cp.controller.menu;
 
-import io.github.vcvitaly.k8cp.view.View;
+import io.github.vcvitaly.k8cp.context.ServiceLocator;
 import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.fxml.Initializable;
@@ -19,6 +19,6 @@ public class MenuController implements Initializable {
     }
 
     private void onAbout() {
-        View.getInstance().showAboutModal();
+        ServiceLocator.getView().showAboutModal();
     }
 }

@@ -44,7 +44,7 @@ public class View {
     }
 
     public void showMainWindow() {
-        createStageAndShow(
+        initStageAndShow(
                 StageCreationParam.builder()
                         .fxmlView(FxmlView.MAIN)
                         .build()
@@ -52,7 +52,7 @@ public class View {
     }
 
     public void showAboutModal() {
-        createStageAndShow(
+        initStageAndShow(
                 StageCreationParam.builder()
                         .fxmlView(FxmlView.ABOUT)
                         .modality(Modality.APPLICATION_MODAL)
@@ -62,7 +62,7 @@ public class View {
     }
 
     public void showErrorModal(String errorMsg) {
-        createStageAndShow(
+        initStageAndShow(
                 StageCreationParam.builder()
                         .fxmlView(FxmlView.ERROR)
                         .modality(Modality.APPLICATION_MODAL)
@@ -74,7 +74,7 @@ public class View {
     }
 
     public void showKubeConfigSelectionWindow() {
-        createStageAndShow(
+        initStageAndShow(
                 StageCreationParam.builder()
                         .fxmlView(FxmlView.KUBE_CONFIG_SELECTION)
                         .resizeable(false)
@@ -83,7 +83,7 @@ public class View {
     }
 
     public void showKubeNamespaceSelectionWindow() {
-        createStageAndShow(
+        initStageAndShow(
                 StageCreationParam.builder()
                         .fxmlView(FxmlView.KUBE_NAMESPACE_SELECTION)
                         .resizeable(false)
@@ -92,7 +92,7 @@ public class View {
     }
 
     public void showKubePodSelectionWindow() {
-        createStageAndShow(
+        initStageAndShow(
                 StageCreationParam.builder()
                         .fxmlView(FxmlView.KUBE_POD_SELECTION)
                         .resizeable(false)
@@ -101,7 +101,7 @@ public class View {
     }
 
     public void showFileInfoModal(String fileInfo) {
-        createStageAndShow(
+        initStageAndShow(
                 StageCreationParam.builder()
                         .fxmlView(FxmlView.FILE_INFO)
                         .modality(Modality.APPLICATION_MODAL)
@@ -140,7 +140,7 @@ public class View {
     }
 
     /* Private methods */
-    private void createStageAndShow(StageCreationParam param) {
+    private void initStageAndShow(StageCreationParam param) {
         final FxmlView fxmlView = param.getFxmlView();
         final FXMLLoader loader = FxmlLoaderUtil.createFxmlLoader(fxmlView);
         final Initializable controller = param.getController();

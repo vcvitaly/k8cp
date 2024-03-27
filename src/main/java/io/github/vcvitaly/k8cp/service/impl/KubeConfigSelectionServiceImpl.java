@@ -22,7 +22,7 @@ public class KubeConfigSelectionServiceImpl implements KubeConfigSelectionServic
     private final KubeConfigHelper kubeConfigHelper;
 
     @Override
-    public List<KubeConfigContainer> getConfigChoices(String kubeFolderPath) throws IOOperationException, KubeContextExtractionException {
+    public List<KubeConfigContainer> getConfigChoices(Path kubeFolderPath) throws IOOperationException, KubeContextExtractionException {
         final List<KubeConfigContainer> list = new ArrayList<>();
         for (Path path : localFsClient.listFiles(kubeFolderPath)) {
             if (!Files.isDirectory(path) && Files.isReadable(path) && kubeConfigHelper.validate(path.toString())) {

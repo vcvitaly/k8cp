@@ -2,6 +2,7 @@ package io.github.vcvitaly.k8cp.domain;
 
 import io.github.vcvitaly.k8cp.enumeration.FileSizeUnit;
 import io.github.vcvitaly.k8cp.enumeration.FileType;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import lombok.Builder;
@@ -10,7 +11,7 @@ import lombok.Data;
 @Data
 @Builder
 public class FileInfoContainer implements Comparable<FileInfoContainer> {
-    private String path;
+    private Path path;
     private String name;
     private Long sizeBytes;
     private Integer size;

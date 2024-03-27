@@ -5,12 +5,12 @@ import io.github.vcvitaly.k8cp.domain.FileInfoContainer;
 import io.github.vcvitaly.k8cp.domain.FileManagerItem;
 import io.github.vcvitaly.k8cp.domain.RootInfoContainer;
 import io.github.vcvitaly.k8cp.exception.IOOperationException;
-import io.github.vcvitaly.k8cp.model.Model;
+import io.github.vcvitaly.k8cp.context.ServiceLocator;
 import io.github.vcvitaly.k8cp.util.BoolStatusReturningConsumer;
 import io.github.vcvitaly.k8cp.util.LocalFileUtil;
 import io.github.vcvitaly.k8cp.util.ItemSelectionUtil;
-import io.github.vcvitaly.k8cp.view.View;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.ResourceBundle;
 import javafx.collections.FXCollections;
@@ -43,12 +43,12 @@ public class LocalPaneController extends PaneController {
             initLocalRootSelector();
         } catch (Exception e) {
             log.error("Could not init the local view", e);
-            View.getInstance().showErrorModal(e.getMessage());
+            ServiceLocator.getView().showErrorModal(e.getMessage());
         }
     }
 
     @Override
-    protected TableView<FileManagerItem> getView() {
+    protected TableView<FileManagerItem> getTableView() {
         return leftView;
     }
 
@@ -83,24 +83,24 @@ public class LocalPaneController extends PaneController {
     }
 
     @Override
-    protected BoolStatusReturningConsumer<String> getPathRefSettingConsumer() {
-        return Model::setLocalPathRef;
+    protected BoolStatusReturningConsumer<Path> getPathRefSettingConsumer() {
+        return ServiceLocator.getModel()::setLocalPathRef;
     }
 
     @Override
     protected void initViewCrumb() {
-        final List<BreadCrumbFile> localBreadcrumbTree = Model.getLocalBreadcrumbTree();
+        final List<BreadCrumbFile> localBreadcrumbTree = ServiceLocator.getModel().getLocalBreadcrumbTree();
         initViewCrumb(localBreadcrumbTree);
     }
 
     @Override
     protected void initViewItems() {
-        final List<FileInfoContainer> localFiles = Model.getLocalFiles();
+        final List<FileInfoContainer> localFiles = ServiceLocator.getModel().getLocalFiles();
         initViewItems(localFiles);
     }
 
     private void initLocalRootSelector() throws IOOperationException {
-        final List<RootInfoContainer> roots = Model.listLocalRoots();
+        final List<RootInfoContainer> roots = ServiceLocator.getModel().listLocalRoots();
         localRootSelector.setItems(FXCollections.observableList(roots));
         localRootSelector.setValue(ItemSelectionUtil.getSelectionItem(roots, rootInfoContainer -> true));
         localRootSelector.valueProperty().addListener((observable, oldValue, newValue) -> {
@@ -113,45 +113,46 @@ public class LocalPaneController extends PaneController {
     @Override
     protected void onParentBtn() {
         onNavigationBtn(() -> {
-            Model.setLocalPathRefToParent();
-            resolveFilesAndBreadcrumbs();
+            if (ServiceLocator.getModel().setLocalPathRefToParent()) {
+                resolveFilesAndBreadcrumbs();
+            }
         });
     }
 
     @Override
     protected void onHomeBtn() {
         onNavigationBtn(() -> {
-            Model.setLocalPathRefToHome();
+            ServiceLocator.getModel().setLocalPathRefToHome();
             resolveFilesAndBreadcrumbs();
         });
-        localRootSelector.setValue(Model.getMainRoot());
+        localRootSelector.setValue(ServiceLocator.getModel().getMainRoot());
     }
 
     @Override
     protected void onRootBtn() {
         onNavigationBtn(() -> {
-            Model.setLocalPathRefToRoot();
+            ServiceLocator.getModel().setLocalPathRefToRoot();
             resolveFilesAndBreadcrumbs();
         });
-        localRootSelector.setValue(Model.getMainRoot());
+        localRootSelector.setValue(ServiceLocator.getModel().getMainRoot());
     }
 
     @Override
     protected void resolveFilesAndBreadcrumbs() throws IOOperationException {
-        Model.resolveLocalBreadcrumbTree();
-        Model.resolveLocalFiles();
+        ServiceLocator.getModel().resolveLocalBreadcrumbTree();
+        ServiceLocator.getModel().resolveLocalFiles();
     }
 
     @Override
-    protected void onBreadcrumb(BoolStatusReturningConsumer<String> pathRefSettingConsumer, BreadCrumbFile selection) {
-        onBreadcrumbInternal(pathRefSettingConsumer, selection, Model::resolveLocalFiles);
+    protected void onBreadcrumb(BoolStatusReturningConsumer<Path> pathRefSettingConsumer, BreadCrumbFile selection) {
+        onBreadcrumbInternal(pathRefSettingConsumer, selection, ServiceLocator.getModel()::resolveLocalFiles);
     }
 
     private void onLocalRootSelection() {
         final RootInfoContainer root = localRootSelector.getValue();
-        final String rootPath = root.path();
-        if (!LocalFileUtil.isInTheSameRoot(rootPath, Model.getLocalPath())) {
-            if (Model.setLocalPathRef(rootPath)) {
+        final Path rootPath = root.path();
+        if (!LocalFileUtil.isInTheSameRoot(rootPath, ServiceLocator.getModel().getLocalPath())) {
+            if (ServiceLocator.getModel().setLocalPathRef(rootPath)) {
                 executeLongRunningAction(this::resolveFilesAndBreadcrumbs, this::handleError, this::refreshCrumbAndItems);
             }
         }

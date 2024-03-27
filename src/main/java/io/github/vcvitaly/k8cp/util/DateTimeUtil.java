@@ -11,8 +11,8 @@ public class DateTimeUtil {
 
     private static final DateTimeFormatter LONG_ISO_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-    public static LocalDateTime toLocalDate(String isoDate, String isoTime) {
-        return LocalDateTime.parse("%s %s".formatted(isoDate, isoTime), LONG_ISO_DATE_FORMATTER);
+    public static LocalDateTime toLocalDate(String fullDate, String fullTime) {
+        return LocalDateTime.parse("%s %s".formatted(fullDate, fullTime.substring(0, 5)), LONG_ISO_DATE_FORMATTER);
     }
 
     public static String toString(LocalDateTime localDateTime) {

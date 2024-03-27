@@ -4,10 +4,10 @@ import io.github.vcvitaly.k8cp.domain.BreadCrumbFile;
 import io.github.vcvitaly.k8cp.domain.FileInfoContainer;
 import io.github.vcvitaly.k8cp.domain.FileManagerItem;
 import io.github.vcvitaly.k8cp.exception.IOOperationException;
-import io.github.vcvitaly.k8cp.model.Model;
+import io.github.vcvitaly.k8cp.context.ServiceLocator;
 import io.github.vcvitaly.k8cp.util.BoolStatusReturningConsumer;
-import io.github.vcvitaly.k8cp.view.View;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.ResourceBundle;
 import javafx.scene.control.Button;
@@ -36,12 +36,12 @@ public class RemotePaneController extends PaneController {
             initView();
         } catch (Exception e) {
             log.error("Could not init the remote view", e);
-            View.getInstance().showErrorModal(e.getMessage());
+            ServiceLocator.getView().showErrorModal(e.getMessage());
         }
     }
 
     @Override
-    protected TableView<FileManagerItem> getView() {
+    protected TableView<FileManagerItem> getTableView() {
         return rightView;
     }
 
@@ -76,26 +76,26 @@ public class RemotePaneController extends PaneController {
     }
 
     @Override
-    protected BoolStatusReturningConsumer<String> getPathRefSettingConsumer() {
-        return Model::setRemotePathRef;
+    protected BoolStatusReturningConsumer<Path> getPathRefSettingConsumer() {
+        return ServiceLocator.getModel()::setRemotePathRef;
     }
 
     @Override
     protected void initViewCrumb() {
-        final List<BreadCrumbFile> remoteBreadcrumbTree = Model.getRemoteBreadcrumbTree();
+        final List<BreadCrumbFile> remoteBreadcrumbTree = ServiceLocator.getModel().getRemoteBreadcrumbTree();
         initViewCrumb(remoteBreadcrumbTree);
     }
 
     @Override
     protected void initViewItems() {
-        final List<FileInfoContainer> remoteFiles = Model.getRemoteFiles();
+        final List<FileInfoContainer> remoteFiles = ServiceLocator.getModel().getRemoteFiles();
         initViewItems(remoteFiles);
     }
 
     @Override
     protected void onParentBtn() {
         onNavigationBtn(() -> {
-            if (Model.setRemotePathRefToParent()) {
+            if (ServiceLocator.getModel().setRemotePathRefToParent()) {
                 resolveFilesAndBreadcrumbs();
             }
         });
@@ -104,7 +104,7 @@ public class RemotePaneController extends PaneController {
     @Override
     protected void onHomeBtn() {
         onNavigationBtn(() -> {
-            Model.setRemotePathRefToHome();
+            ServiceLocator.getModel().setRemotePathRefToHome();
             resolveFilesAndBreadcrumbs();
         });
     }
@@ -112,19 +112,19 @@ public class RemotePaneController extends PaneController {
     @Override
     protected void onRootBtn() {
         onNavigationBtn(() -> {
-            Model.setRemotePathRefToRoot();
+            ServiceLocator.getModel().setRemotePathRefToRoot();
             resolveFilesAndBreadcrumbs();
         });
     }
 
     @Override
     protected void resolveFilesAndBreadcrumbs() throws IOOperationException {
-        Model.resolveRemoteBreadcrumbTree();
-        Model.resolveRemoteFiles();
+        ServiceLocator.getModel().resolveRemoteBreadcrumbTree();
+        ServiceLocator.getModel().resolveRemoteFiles();
     }
 
     @Override
-    protected void onBreadcrumb(BoolStatusReturningConsumer<String> pathRefSettingConsumer, BreadCrumbFile selection) {
-        onBreadcrumbInternal(pathRefSettingConsumer, selection, Model::resolveRemoteFiles);
+    protected void onBreadcrumb(BoolStatusReturningConsumer<Path> pathRefSettingConsumer, BreadCrumbFile selection) {
+        onBreadcrumbInternal(pathRefSettingConsumer, selection, ServiceLocator.getModel()::resolveRemoteFiles);
     }
 }

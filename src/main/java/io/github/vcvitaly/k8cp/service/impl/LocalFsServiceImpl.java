@@ -5,13 +5,13 @@ import io.github.vcvitaly.k8cp.domain.FileInfoContainer;
 import io.github.vcvitaly.k8cp.domain.FileSizeContainer;
 import io.github.vcvitaly.k8cp.domain.RootInfoContainer;
 import io.github.vcvitaly.k8cp.enumeration.FileType;
+import io.github.vcvitaly.k8cp.enumeration.OsFamily;
 import io.github.vcvitaly.k8cp.exception.IOOperationException;
 import io.github.vcvitaly.k8cp.service.LocalFsService;
+import io.github.vcvitaly.k8cp.service.LocalRootResolver;
 import io.github.vcvitaly.k8cp.service.SizeConverter;
-import io.github.vcvitaly.k8cp.util.Constants;
 import io.github.vcvitaly.k8cp.util.DateTimeUtil;
 import io.github.vcvitaly.k8cp.util.LocalFileUtil;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,43 +19,42 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class LocalFsServiceImpl implements LocalFsService {
 
-    private static final String MNT_DIR = "/mnt";
-    private static final String VOLUMES_DIR = "/Volumes";
     private final LocalFsClient localFsClient;
     private final SizeConverter sizeConverter;
+    private final LocalRootResolver localRootResolver;
 
     @Override
-    public List<FileInfoContainer> listFiles(String path, boolean showHidden) throws IOOperationException {
+    public List<FileInfoContainer> listFiles(Path path, boolean showHidden) throws IOOperationException {
         return listFilesInternal(path, showHidden);
     }
 
     @Override
     public List<RootInfoContainer> listWindowsRoots() {
-        final File[] roots = File.listRoots();
-        return Arrays.stream(roots)
-                .map(File::toPath)
-                .map(this::toRootInfoContainer)
-                .toList();
+        return localRootResolver.listWindowsRoots();
     }
 
     @Override
     public List<RootInfoContainer> listLinuxRoots() throws IOOperationException {
-        return listUnixRoots(MNT_DIR);
+        return localRootResolver.listLinuxRoots();
     }
 
     @Override
     public List<RootInfoContainer> listMacosRoots() throws IOOperationException {
-        return listUnixRoots(VOLUMES_DIR);
+        return localRootResolver.listMacosRoots();
     }
 
-    private List<FileInfoContainer> listFilesInternal(String path, boolean showHidden) throws IOOperationException {
+    @Override
+    public RootInfoContainer getMainRoot(OsFamily osFamily) {
+        return localRootResolver.getMainRoot(osFamily);
+    }
+
+    private List<FileInfoContainer> listFilesInternal(Path path, boolean showHidden) throws IOOperationException {
         final List<Path> pathsUnfiltered = listPathsInternal(path);
         final List<Path> paths = pathsUnfiltered.stream()
                 .filter(p -> LocalFileUtil.shouldBeShownBasedOnHiddenFlag(p, showHidden))
@@ -68,7 +67,7 @@ public class LocalFsServiceImpl implements LocalFsService {
         return list;
     }
 
-    private List<Path> listPathsInternal(String path) throws IOOperationException {
+    private List<Path> listPathsInternal(Path path) throws IOOperationException {
         return localFsClient.listFiles(path);
     }
 
@@ -78,7 +77,7 @@ public class LocalFsServiceImpl implements LocalFsService {
             final FileSizeContainer fileSizeContainer = sizeConverter.toFileSizeDto(size);
             final BasicFileAttributes attrs = Files.readAttributes(path, BasicFileAttributes.class);
             return FileInfoContainer.builder()
-                    .path(path.toString())
+                    .path(path)
                     .name(LocalFileUtil.getPathFilename(path))
                     .sizeBytes(size)
                     .size(fileSizeContainer.sizeInUnit())
@@ -93,21 +92,5 @@ public class LocalFsServiceImpl implements LocalFsService {
 
     private LocalDateTime toLocalDateTime(FileTime fileTime) {
         return DateTimeUtil.toLocalDateTime(fileTime);
-    }
-
-    private RootInfoContainer toRootInfoContainer(Path path) {
-        return new RootInfoContainer(path.toString(), LocalFileUtil.normalizeRootPath(path));
-    }
-
-    private List<RootInfoContainer> listUnixRoots(String rootsDir) throws IOOperationException {
-        final List<RootInfoContainer> roots = new ArrayList<>();
-        roots.add(new RootInfoContainer(Constants.UNIX_ROOT, Constants.UNIX_ROOT));
-        final List<Path> paths = listPathsInternal(rootsDir);
-        roots.addAll(
-                paths.stream()
-                        .map(this::toRootInfoContainer)
-                        .toList()
-        );
-        return roots;
     }
 }

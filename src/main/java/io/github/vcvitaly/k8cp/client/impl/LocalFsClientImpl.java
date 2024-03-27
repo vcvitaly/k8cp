@@ -11,12 +11,11 @@ import java.util.stream.Stream;
 
 public class LocalFsClientImpl implements LocalFsClient {
     @Override
-    public List<Path> listFiles(String pathStr) throws IOOperationException {
-        final Path path = Paths.get(pathStr);
+    public List<Path> listFiles(Path path) throws IOOperationException {
         try (final Stream<Path> pathStream = Files.list(path)) {
             return pathStream.toList();
         } catch (IOException e) {
-            throw new IOOperationException("An error while listing files in " + pathStr, e);
+            throw new IOOperationException("An error while listing files in " + path, e);
         }
     }
 

@@ -6,6 +6,6 @@ import java.util.List;
 
 public interface LocalFsClient {
 
-    List<Path> listFiles(String path) throws IOOperationException;
+    List<Path> listFiles(Path path) throws IOOperationException;
 
 }

@@ -1,10 +1,12 @@
 package io.github.vcvitaly.k8cp.service;
 
+import java.nio.file.Path;
+
 public interface PathProvider {
 
-    String provideLocalHomePath();
+    Path provideLocalHomePath();
 
-    String provideLocalRootPath();
+    Path provideLocalRootPath();
 
-    String provideRemoteRootPath();
+    Path provideRemoteRootPath();
 }

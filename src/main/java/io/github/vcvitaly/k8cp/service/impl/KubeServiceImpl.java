@@ -13,8 +13,10 @@ import io.github.vcvitaly.k8cp.service.KubeService;
 import io.github.vcvitaly.k8cp.service.SizeConverter;
 import io.github.vcvitaly.k8cp.util.Constants;
 import io.github.vcvitaly.k8cp.util.DateTimeUtil;
+import io.github.vcvitaly.k8cp.util.LocalFileUtil;
 import io.github.vcvitaly.k8cp.util.StringUtil;
 import io.github.vcvitaly.k8cp.util.UnixPathUtil;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +24,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class KubeServiceImpl implements KubeService {
 
-    private static final List<String> LS_PARTS = List.of("ls", "--time-style=long-iso", "-l");
+    private static final List<String> LS_PARTS = List.of("ls", "--full-time", "-l");
     private static final List<String> ECHO_HOME_PARTS = List.of("sh", "-c", "echo $HOME");
     private static final String DIRECTORY_MODIFIER = "d";
     private static final String SYMLINK_MODIFIER = "l";
@@ -31,9 +33,9 @@ public class KubeServiceImpl implements KubeService {
     private final SizeConverter sizeConverter;
 
     @Override
-    public List<FileInfoContainer> listFiles(String namespace, String podName, String path, boolean showHidden) throws IOOperationException {
+    public List<FileInfoContainer> listFiles(String namespace, String podName, Path path, boolean showHidden) throws IOOperationException {
         final ArrayList<String> partsList = new ArrayList<>(LS_PARTS);
-        partsList.add(path);
+        partsList.add(UnixPathUtil.normalizePathToString(path));
         final String[] cmdParts  = partsList.toArray(String[]::new);
         try {
             final List<String> lines = kubeClient.execAndReturnOut(namespace, podName, cmdParts);
@@ -71,14 +73,14 @@ public class KubeServiceImpl implements KubeService {
         }
     }
 
-    private FileInfoContainer toFileInfoContainer(String path, String lsLine) {
+    private FileInfoContainer toFileInfoContainer(Path path, String lsLine) {
         final String[] parts = lsLine.split("\\s+");
         final String attrs = parts[0];
         final long size = Long.parseLong(parts[4]);
         final String date = parts[5];
         final String time = parts[6];
-        final String nameRaw = parts[7];
-        final String fullPath = UnixPathUtil.concatPaths(path, nameRaw);
+        final String nameRaw = parts[8];
+        final Path fullPath = LocalFileUtil.concatPaths(path, LocalFileUtil.getPath(nameRaw));
         final String name = StringUtil.stripEndingSlash(nameRaw);
         final FileSizeContainer fileSizeContainer = sizeConverter.toFileSizeDto(size);
         return FileInfoContainer.builder()

@@ -1,7 +1,6 @@
 package io.github.vcvitaly.k8cp.client.impl;
 
 import io.github.vcvitaly.k8cp.client.KubeClient;
-import io.github.vcvitaly.k8cp.domain.KubeConfigContainer;
 import io.github.vcvitaly.k8cp.domain.KubeNamespace;
 import io.github.vcvitaly.k8cp.domain.KubePod;
 import io.github.vcvitaly.k8cp.exception.KubeApiException;
@@ -16,13 +15,12 @@ import io.kubernetes.client.openapi.models.V1NamespaceList;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodList;
-import io.kubernetes.client.util.ClientBuilder;
-import io.kubernetes.client.util.KubeConfig;
+import io.kubernetes.client.util.Config;
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,15 +33,13 @@ public class KubeClientImpl implements KubeClient {
 
     private static final int WAIT_TIMEOUT_MS = 250;
     public static final String UNKNOWN_OBJECT_NAME = "UNKNOWN";
-    private final KubeConfigContainer configContainer;
     private final Exec exec;
     private final CoreV1Api api;
 
-    public KubeClientImpl(KubeConfigContainer kubeConfig) {
-        this.configContainer = kubeConfig;
+    public KubeClientImpl(String configYml) {
         ApiClient client;
-        try (final FileReader fr = new FileReader(kubeConfig.path())) {
-            client = ClientBuilder.kubeconfig(KubeConfig.loadKubeConfig(fr)).build();
+        try (final StringReader sr = new StringReader(configYml)) {
+            client = Config.fromConfig(sr);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -72,7 +68,7 @@ public class KubeClientImpl implements KubeClient {
                     .map(KubeNamespace::new)
                     .toList();
         } catch (ApiException e) {
-            throw new KubeApiException("Could not get a list of namespaces for [%s]".formatted(configContainer), e);
+            throw new KubeApiException("Could not get a list of namespaces", e);
         }
     }
 
@@ -114,12 +110,12 @@ public class KubeClientImpl implements KubeClient {
         proc.destroy();
 
         if (!ref.errLines.isEmpty()) {
-            log.error("Err output: {}", ref.errLines);
+            throw new IOException("Err output: %s".formatted(ref.errLines));
         }
 
         final int exitValue = proc.exitValue();
         if (exitValue != 0) {
-            log.error("Exit code [%d] while running %s".formatted(exitValue, cmdParts));
+            log.error("Exit code [%d] while running %s".formatted(exitValue, Arrays.toString(cmdParts)));
         }
 
         return ref.outLines;

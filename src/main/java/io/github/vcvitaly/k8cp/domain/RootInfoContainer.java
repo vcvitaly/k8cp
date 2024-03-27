@@ -1,6 +1,8 @@
 package io.github.vcvitaly.k8cp.domain;
 
-public record RootInfoContainer(String path, String name) {
+import java.nio.file.Path;
+
+public record RootInfoContainer(Path path, String name) {
 
     @Override
     public String toString() {

@@ -2,7 +2,7 @@ package io.github.vcvitaly.k8cp.controller.init;
 
 import io.github.vcvitaly.k8cp.domain.KubeNamespace;
 import io.github.vcvitaly.k8cp.exception.KubeApiException;
-import io.github.vcvitaly.k8cp.model.Model;
+import io.github.vcvitaly.k8cp.context.ServiceLocator;
 import io.github.vcvitaly.k8cp.util.Constants;
 import io.github.vcvitaly.k8cp.util.ItemSelectionUtil;
 import io.github.vcvitaly.k8cp.view.View;
@@ -29,33 +29,37 @@ public class KubeNamespaceSelectionController implements Initializable {
         prevBtn.setOnAction(e -> onPrev());
         nextBtn.setOnAction(e -> onNext());
         try {
-            final List<KubeNamespace> namespaces = Model.getKubeNamespaces();
-            namespaceSelector.setItems(FXCollections.observableList(namespaces));
-            final KubeNamespace selectedItem = ItemSelectionUtil.getSelectionItem(
-                    namespaces,
-                    selection -> selection.name().equals(Constants.DEFAULT_NAMESPACE_NAME)
-            );
-            namespaceSelector.setValue(selectedItem);
-            setKubeNamespaceSelection(selectedItem);
-            namespaceSelector.valueProperty().addListener(observable -> setKubeNamespaceSelection());
-            nextBtn.setDisable(false);
+            final List<KubeNamespace> namespaces = ServiceLocator.getModel().getKubeNamespaces();
+            if (!namespaces.isEmpty()) {
+                namespaceSelector.setItems(FXCollections.observableList(namespaces));
+                final KubeNamespace selectedItem = ItemSelectionUtil.getSelectionItem(
+                        namespaces,
+                        selection -> selection.name().equals(Constants.DEFAULT_NAMESPACE_NAME)
+                );
+                namespaceSelector.setValue(selectedItem);
+                setKubeNamespaceSelection(selectedItem);
+                namespaceSelector.valueProperty().addListener(observable -> setKubeNamespaceSelection());
+                nextBtn.setDisable(false);
+            } else {
+                errorLbl.setText("There are no namespaces in this cluster");
+            }
         } catch (KubeApiException e) {
             log.error("Could not get namespaces list", e);
             errorLbl.setText("Could not get namespaces list");
-            View.getInstance().showErrorModal(e.getMessage());
+            ServiceLocator.getView().showErrorModal(e.getMessage());
         }
     }
 
     private void onNext() {
         final Stage selectionStage = (Stage) nextBtn.getScene().getWindow();
-        View.getInstance().closeStage(selectionStage);
-        View.getInstance().showKubePodSelectionWindow();
+        ServiceLocator.getView().closeStage(selectionStage);
+        ServiceLocator.getView().showKubePodSelectionWindow();
     }
 
     private void onPrev() {
         final Stage selectionStage = (Stage) prevBtn.getScene().getWindow();
-        View.getInstance().closeStage(selectionStage);
-        View.getInstance().showKubeConfigSelectionWindow();
+        ServiceLocator.getView().closeStage(selectionStage);
+        ServiceLocator.getView().showKubeConfigSelectionWindow();
     }
 
     private void setKubeNamespaceSelection() {
@@ -64,6 +68,6 @@ public class KubeNamespaceSelectionController implements Initializable {
     }
 
     private void setKubeNamespaceSelection(KubeNamespace selection) {
-        Model.setKubeNamespaceSelection(selection);
+        ServiceLocator.getModel().setKubeNamespaceSelection(selection);
     }
 }

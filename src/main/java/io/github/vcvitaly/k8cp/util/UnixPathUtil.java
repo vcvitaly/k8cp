@@ -1,5 +1,6 @@
 package io.github.vcvitaly.k8cp.util;
 
+import java.nio.file.Path;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -32,5 +33,9 @@ public class UnixPathUtil {
         path = StringUtil.stripEndingSlash(path);
         final int lastIndexOfFwSlash = path.lastIndexOf('/');
         return StringUtil.stripBeginningSlash(path.substring(lastIndexOfFwSlash));
+    }
+
+    public static String normalizePathToString(Path path) {
+        return path.toString().replaceAll(Constants.WINDOWS_SEPARATOR_REGEX, Constants.UNIX_SEPARATOR);
     }
 }

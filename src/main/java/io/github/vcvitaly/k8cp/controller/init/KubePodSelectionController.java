@@ -2,7 +2,7 @@ package io.github.vcvitaly.k8cp.controller.init;
 
 import io.github.vcvitaly.k8cp.domain.KubePod;
 import io.github.vcvitaly.k8cp.exception.KubeApiException;
-import io.github.vcvitaly.k8cp.model.Model;
+import io.github.vcvitaly.k8cp.context.ServiceLocator;
 import io.github.vcvitaly.k8cp.util.ItemSelectionUtil;
 import io.github.vcvitaly.k8cp.view.View;
 import java.net.URL;
@@ -29,7 +29,7 @@ public class KubePodSelectionController implements Initializable {
         prevBtn.setOnAction(e -> onPrev());
         nextBtn.setOnAction(e -> onNext());
         try {
-            final List<KubePod> pods = Model.getKubePods();
+            final List<KubePod> pods = ServiceLocator.getModel().getKubePods();
             if (!pods.isEmpty()) {
                 podSelector.setItems(FXCollections.observableList(pods));
                 final KubePod selectedItem = ItemSelectionUtil.getSelectionItem(
@@ -48,20 +48,20 @@ public class KubePodSelectionController implements Initializable {
         } catch (KubeApiException e) {
             log.error("Could not get pod list", e);
             errorLbl.setText("Could not get pod list");
-            View.getInstance().showErrorModal(e.getMessage());
+            ServiceLocator.getView().showErrorModal(e.getMessage());
         }
     }
 
     private void onNext() {
         final Stage selectionStage = (Stage) nextBtn.getScene().getWindow();
-        View.getInstance().closeStage(selectionStage);
-        View.getInstance().showMainWindow();
+        ServiceLocator.getView().closeStage(selectionStage);
+        ServiceLocator.getView().showMainWindow();
     }
 
     private void onPrev() {
         final Stage selectionStage = (Stage) prevBtn.getScene().getWindow();
-        View.getInstance().closeStage(selectionStage);
-        View.getInstance().showKubeNamespaceSelectionWindow();
+        ServiceLocator.getView().closeStage(selectionStage);
+        ServiceLocator.getView().showKubeNamespaceSelectionWindow();
     }
 
     private void setKubePodSelection() {
@@ -70,6 +70,6 @@ public class KubePodSelectionController implements Initializable {
     }
 
     private void setKubePodSelection(KubePod selection) {
-        Model.setKubePodSelection(selection);
+        ServiceLocator.getModel().setKubePodSelection(selection);
     }
 }

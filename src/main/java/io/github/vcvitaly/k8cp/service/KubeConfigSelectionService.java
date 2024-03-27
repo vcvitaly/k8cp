@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface KubeConfigSelectionService {
 
-    List<KubeConfigContainer> getConfigChoices(String kubeFolderPath) throws IOOperationException, KubeContextExtractionException;
+    List<KubeConfigContainer> getConfigChoices(Path kubeFolderPath) throws IOOperationException, KubeContextExtractionException;
 
     KubeConfigContainer toKubeConfig(Path path) throws KubeContextExtractionException;
 }

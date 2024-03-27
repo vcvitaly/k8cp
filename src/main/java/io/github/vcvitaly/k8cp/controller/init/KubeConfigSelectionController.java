@@ -3,7 +3,7 @@ package io.github.vcvitaly.k8cp.controller.init;
 import io.github.vcvitaly.k8cp.domain.KubeConfigContainer;
 import io.github.vcvitaly.k8cp.exception.IOOperationException;
 import io.github.vcvitaly.k8cp.exception.KubeContextExtractionException;
-import io.github.vcvitaly.k8cp.model.Model;
+import io.github.vcvitaly.k8cp.context.ServiceLocator;
 import io.github.vcvitaly.k8cp.util.Constants;
 import io.github.vcvitaly.k8cp.util.ItemSelectionUtil;
 import io.github.vcvitaly.k8cp.view.View;
@@ -33,7 +33,7 @@ public class KubeConfigSelectionController implements Initializable {
         nextBtn.setOnAction(e -> onNext());
         fsChooserBtn.setOnAction(e -> onFileSelection());
         try {
-            final ObservableList<KubeConfigContainer> kubeConfigList = Model.getKubeConfigList();
+            final ObservableList<KubeConfigContainer> kubeConfigList = ServiceLocator.getModel().getKubeConfigList();
             if (!kubeConfigList.isEmpty()) {
                 setItemsIfKubeConfigsFound(kubeConfigList);
             } else {
@@ -42,21 +42,21 @@ public class KubeConfigSelectionController implements Initializable {
         } catch (IOOperationException | KubeContextExtractionException e) {
             log.error("Could not get kube config list", e);
             setItemsIfNoKubeConfigFound();
-            View.getInstance().showErrorModal(e.getMessage());
+            ServiceLocator.getView().showErrorModal(e.getMessage());
         }
     }
 
     private void onNext() {
         final Stage selectionStage = (Stage) nextBtn.getScene().getWindow();
-        View.getInstance().closeStage(selectionStage);
-        View.getInstance().showKubeNamespaceSelectionWindow();
+        ServiceLocator.getView().closeStage(selectionStage);
+        ServiceLocator.getView().showKubeNamespaceSelectionWindow();
     }
 
     private void onFileSelection() {
         final File file = getFileFromFileChooser();
         if (file != null) {
             try {
-                final KubeConfigContainer selection = Model.getKubeConfigSelectionDto(file.toPath());
+                final KubeConfigContainer selection = ServiceLocator.getModel().getKubeConfigSelectionDto(file.toPath());
                 setKubeConfigSelection(selection);
                 nextBtn.setDisable(false);
                 chooseFileLbl.setVisible(false);
@@ -64,15 +64,13 @@ public class KubeConfigSelectionController implements Initializable {
                 chooseFromFsLbl.setVisible(false);
                 selectedKubeConfigFileLbl.setText("You selected: " + selection.toString());
             } catch (KubeContextExtractionException ex) {
-                View.getInstance().showErrorModal(ex.getMessage());
+                ServiceLocator.getView().showErrorModal(ex.getMessage());
             }
         }
     }
 
     private File getFileFromFileChooser() {
-        final FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Open Resource File");
-        return fileChooser.showOpenDialog(View.getInstance().getCurrentStage());
+        return ServiceLocator.getFileChooserHelper().getFile("Choose kube config file", ServiceLocator.getView().getCurrentStage());
     }
 
     private void setItemsIfKubeConfigsFound(ObservableList<KubeConfigContainer> kubeConfigList) {
@@ -102,6 +100,6 @@ public class KubeConfigSelectionController implements Initializable {
     }
 
     private void setKubeConfigSelection(KubeConfigContainer selection) {
-        Model.setKubeConfigSelection(selection);
+        ServiceLocator.getModel().setKubeConfigSelection(selection);
     }
 }
